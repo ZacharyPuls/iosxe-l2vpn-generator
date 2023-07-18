@@ -1,0 +1,38 @@
+{% import 'base.j2' as base %}
+ethernet cfm domain {{ cfm_domain }} level {{ cfm_level }}
+ service {{ base.render_short_circuit_id(circuit_id) }} evc {{ base.render_long_circuit_id(vcid, circuit_id) }}
+  continuity-check
+  continuity-check interval {{ ccm_interval }}
+ethernet evc {{ base.render_long_circuit_id(vcid, circuit_id) }}
+policy-map {{ base.render_short_circuit_id(circuit_id) }}-INGRESS
+ class class-default
+  police cir 10000000 bc 100000 pir 11000000
+   conform-action set-mpls-exp-topmost-transmit 0
+   exceed-action set-mpls-exp-topmost-transmit 0
+   violate-action drop
+policy-map {{ base.render_short_circuit_id(circuit_id) }}-EGRESS
+ class CLASS-PLACEHOLDER-EGRESS
+ class class-default
+  queue-limit 100000 bytes
+pseudowire-class PWC-{{ vcid }}
+ encapsulation mpls
+ control-word
+interface {{ interface }}
+ service instance {{ vlan }} ethernet {{ base.render_long_circuit_id(vcid, circuit_id) }}
+  description {{ base.render_long_circuit_id(vcid, circuit_id) }}
+  encapsulation dot1q {{ vlan }}
+  l2protocol forward
+  service-policy input {{ base.render_short_circuit_id(circuit_id) }}-INGRESS
+  service-policy output {{ base.render_short_circuit_id(circuit_id) }}-EGRESS
+  xconnect {{ peer_router_loopback_ip_address }} {{ vcid }} encapsulation mpls pw-class PWC-{{ vcid }}
+  cfm mep domain {{ cfm_domain }} mpid {{ source_mpid }}
+ip sla {{ slm_ip_sla_id }}
+ ethernet y1731 loss SLM domain {{ cfm_domain }} evc {{ base.render_long_circuit_id(vcid, circuit_id) }} mpid {{ target_mpid }} cos 5 source mpid {{ source_mpid }}
+  history interval 5
+  aggregate interval 60
+ip sla schedule {{ slm_ip_sla_id }} life forever start-time after 00:02:00
+ip sla {{ dmm_ip_sla_id }}
+ ethernet y1731 delay DMM domain {{ cfm_domain }} evc {{ base.render_long_circuit_id(vcid, circuit_id) }} mpid {{ target_mpid }} cos 5 source mpid {{ source_mpid }}
+  history interval 5
+  aggregate interval 60
+ip sla schedule {{ dmm_ip_sla_id }} life forever start-time after 00:02:00

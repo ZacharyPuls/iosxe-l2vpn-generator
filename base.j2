@@ -1,0 +1,4 @@
+{% macro render_circuit_id_prefix() -%}05VLP{%- endmacro %}
+{% macro render_circuit_id_suffix() -%}KFN{%- endmacro %}
+{% macro render_short_circuit_id(circuit_id) -%}{{ render_circuit_id_prefix() }}{{ circuit_id }}{{ render_circuit_id_suffix() }}{%- endmacro %}
+{% macro render_long_circuit_id(vcid, circuit_id, customer='KSFIBERNET', zloc='LAB') -%}VCID{{ vcid }}_{{ render_short_circuit_id(circuit_id) }}_{{ customer|upper }}_{{ zloc|upper }}{%- endmacro %}

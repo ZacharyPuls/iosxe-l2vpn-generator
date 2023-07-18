@@ -1,0 +1,13 @@
+{% import 'base.j2' as base %}
+interface {{ interface }}
+ no service instance {{ vlan }} ethernet
+exit
+no ip sla {{ slm_ip_sla_id }}
+no ip sla {{ dmm_ip_sla_id }}
+ethernet cfm domain {{ cfm_domain }} level {{ cfm_level }}
+ no service {{ base.render_short_circuit_id(circuit_id) }} evc {{ base.render_long_circuit_id(vcid, circuit_id) }}
+exit
+no ethernet evc {{ base.render_long_circuit_id(vcid, circuit_id) }}
+no policy-map {{ base.render_short_circuit_id(circuit_id) }}-INGRESS
+no policy-map {{ base.render_short_circuit_id(circuit_id) }}-EGRESS
+no pseudowire-class PWC-{{ vcid }}

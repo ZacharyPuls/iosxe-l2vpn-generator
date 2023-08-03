@@ -21,9 +21,10 @@ class L2VPN:
     target_mpid: int
     slm_ip_sla_id: int
     dmm_ip_sla_id: int
-    ccm_interval: str = '10s'
+    ccm_interval: str = '1s'
     cfm_domain: str = 'OPERATOR'
     cfm_level: int = 1
+    enable_cfm_hw_offload: bool = False
 
 
 def get_next_available_efp_id(a_device: ConnectHandler, a_interface: str, z_device: ConnectHandler, z_interface: str) -> int:
@@ -78,6 +79,8 @@ def main():
     provision.add_argument('--z-loopback', help='Provision the test L2VPN(s) using this IPv4 address as the Z device Loopback IP', dest='z_device_loopback_ip_address')
     provision.add_argument('--a-interface', help='Provision the test L2VPN(s) on the A device under this interface', dest='a_device_interface')
     provision.add_argument('--z-interface', help='Provision the test L2VPN(s) on the Z device under this interface', dest='z_device_interface')
+    provision.add_argument('--ccm-interval', help='Provision the test L2VPN(s) with this CCM transmit interval, in seconds (default 10s)', dest='ccm_interval', type=int, default=10)
+    provision.add_argument('--hw-offload', help='Provision the test L2VPN(s) with CCM hardware offload enabled', dest='hw_offload', action='store_true', default=False)
     provision.add_argument('--dry-run', help='Don\'t provision the test L2VPN(s), just write the configuration that would be applied to the respective device filenames', dest='dry_run', action='store_true')
 
     deprovision = subparsers.add_parser('deprovision', help='Deprovision all previously provisioned test L2VPNs on the provided IOS-XE devices')
@@ -130,9 +133,9 @@ def main():
             vcid: str = f'500{vlan_padded}'
             circuit_id: str = vlan_padded
 
-            a_l2vpn = L2VPN(circuit_id=circuit_id, vcid=vcid, interface=args.a_device_interface, vlan=vlan, peer_router_loopback_ip_address=args.z_device_loopback_ip_address, source_mpid=1, target_mpid=2, slm_ip_sla_id=slm_id, dmm_ip_sla_id=dmm_id)
+            a_l2vpn = L2VPN(circuit_id=circuit_id, vcid=vcid, interface=args.a_device_interface, vlan=vlan, peer_router_loopback_ip_address=args.z_device_loopback_ip_address, source_mpid=1, target_mpid=2, slm_ip_sla_id=slm_id, dmm_ip_sla_id=dmm_id, ccm_interval=f'{args.ccm_interval}s', enable_cfm_hw_offload=args.hw_offload)
             a_config: str = l2vpn_template.render(asdict(a_l2vpn))
-            z_l2vpn = L2VPN(circuit_id=circuit_id, vcid=vcid, interface=args.z_device_interface, vlan=vlan, peer_router_loopback_ip_address=args.a_device_loopback_ip_address, source_mpid=2, target_mpid=1, slm_ip_sla_id=slm_id, dmm_ip_sla_id=dmm_id)
+            z_l2vpn = L2VPN(circuit_id=circuit_id, vcid=vcid, interface=args.z_device_interface, vlan=vlan, peer_router_loopback_ip_address=args.a_device_loopback_ip_address, source_mpid=2, target_mpid=1, slm_ip_sla_id=slm_id, dmm_ip_sla_id=dmm_id, ccm_interval=f'{args.ccm_interval}s', enable_cfm_hw_offload=args.hw_offload)
             z_config: str = l2vpn_template.render(asdict(z_l2vpn))
 
             if args.dry_run:

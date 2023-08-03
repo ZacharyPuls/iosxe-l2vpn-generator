@@ -3,6 +3,9 @@ ethernet cfm domain {{ cfm_domain }} level {{ cfm_level }}
  service {{ base.render_short_circuit_id(circuit_id) }} evc {{ base.render_long_circuit_id(vcid, circuit_id) }}
   continuity-check
   continuity-check interval {{ ccm_interval }}
+  {% if enable_cfm_hw_offload %}
+  offload sampling 6000
+  {% endif %}
 ethernet evc {{ base.render_long_circuit_id(vcid, circuit_id) }}
 policy-map {{ base.render_short_circuit_id(circuit_id) }}-INGRESS
  class class-default
